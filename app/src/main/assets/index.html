@@ -1,30 +1,430 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Settings</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f2f2f7; margin: 0; padding: 0; }
-        .header { font-size: 34px; font-weight: bold; padding: 20px 16px 10px; background: #f2f2f7; }
-        .section { background: #fff; margin: 20px 16px; border-radius: 10px; overflow: hidden; }
-        .row { padding: 12px 16px; font-size: 17px; border-bottom: 1px solid #e5e5ea; display: flex; justify-content: space-between; align-items: center; }
-        .row:last-child { border-bottom: none; }
-        .row-title { display: flex; align-items: center; gap: 12px; }
-        .icon { width: 28px; height: 28px; border-radius: 6px; display: inline-block; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Settings</title>
+  <style>
+    :root {
+      --bg: #f2f2f7;
+      --surface: #ffffff;
+      --surface-pressed: #e5e5ea;
+      --text: #111111;
+      --text-secondary: #6e6e73;
+      --separator: #e5e5ea;
+      --search-bg: #e3e3e8;
+      --accent: #007aff;
+      --green: #34c759;
+      --red: #ff3b30;
+      --orange: #ff9500;
+      --indigo: #5856d6;
+      --font-scale: 1;
+    }
+    body.dark {
+      --bg: #000000;
+      --surface: #1c1c1e;
+      --surface-pressed: #2c2c2e;
+      --text: #f5f5f7;
+      --text-secondary: #8e8e93;
+      --separator: #2c2c2e;
+      --search-bg: #1c1c1e;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0; padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg); color: var(--text);
+      font-size: calc(16px * var(--font-scale)); line-height: 1.35;
+      transition: background-color 0.2s ease, color 0.2s ease;
+      overflow-x: hidden;
+    }
+    .view { min-height: 100vh; padding-bottom: 36px; }
+    .view.hidden { display: none; }
+    .top-bar { position: sticky; top: 0; z-index: 20; background: var(--bg); padding: 16px 16px 10px; }
+    .large-title { font-size: calc(32px * var(--font-scale)); font-weight: 700; letter-spacing: -0.02em; margin: 0 0 12px; text-align: left; }
+    .sub-header { display: flex; align-items: center; gap: 8px; padding: 14px 16px; position: sticky; top: 0; z-index: 20; background: var(--bg); border-bottom: 1px solid var(--separator); }
+    .back-btn { display: inline-flex; align-items: center; gap: 4px; border: none; background: transparent; color: var(--accent); font-size: calc(16px * var(--font-scale)); font-weight: 500; padding: 4px 6px 4px 0; cursor: pointer; }
+    .sub-title { font-size: calc(18px * var(--font-scale)); font-weight: 600; margin: 0; flex: 1; text-align: left; }
+    .search-wrap { position: relative; display: flex; align-items: center; }
+    .search-icon { position: absolute; left: 12px; color: var(--text-secondary); width: 16px; height: 16px; pointer-events: none; }
+    .search-input { width: 100%; padding: 10px 36px; border: none; border-radius: 11px; background: var(--search-bg); color: var(--text); font-size: calc(15px * var(--font-scale)); outline: none; }
+    .search-clear { position: absolute; right: 10px; border: none; background: var(--text-secondary); color: var(--bg); width: 18px; height: 18px; border-radius: 50%; font-size: 12px; line-height: 18px; text-align: center; cursor: pointer; display: none; padding: 0; }
+    .search-clear.visible { display: block; }
+    .group-label { margin: 18px 20px 6px; font-size: calc(12px * var(--font-scale)); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text-secondary); text-align: left; }
+    .section { background: var(--surface); margin: 0 16px 14px; border-radius: 12px; overflow: hidden; }
+    .profile-card { display: flex; align-items: center; gap: 14px; padding: 14px 16px; cursor: pointer; }
+    .profile-card:active { background: var(--surface-pressed); }
+    .avatar { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--indigo)); color: #fff; font-size: 20px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .profile-meta { flex: 1; text-align: left; min-width: 0; }
+    .profile-name { font-size: calc(18px * var(--font-scale)); font-weight: 600; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .profile-sub { font-size: calc(13px * var(--font-scale)); color: var(--text-secondary); margin: 2px 0 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--separator); text-align: left; }
+    .row.clickable { cursor: pointer; }
+    .row.clickable:active { background: var(--surface-pressed); }
+    .row:last-child { border-bottom: none; }
+    .row-left { display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1; }
+    .icon-badge { width: 30px; height: 30px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; color: #ffffff; flex-shrink: 0; }
+    .icon-badge svg { width: 17px; height: 17px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .row-text { display: flex; flex-direction: column; min-width: 0; }
+    .row-title { font-size: calc(16px * var(--font-scale)); font-weight: 400; color: var(--text); }
+    .row-subtitle { font-size: calc(12px * var(--font-scale)); color: var(--text-secondary); margin-top: 2px; }
+    .row-right { display: flex; align-items: center; gap: 6px; color: var(--text-secondary); font-size: calc(15px * var(--font-scale)); flex-shrink: 0; }
+    .chevron { width: 16px; height: 16px; stroke: var(--text-secondary); fill: none; stroke-width: 2.2; opacity: 0.65; }
+    .switch { position: relative; display: inline-block; width: 50px; height: 30px; flex-shrink: 0; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; inset: 0; background-color: #c7c7cc; transition: 0.2s ease; border-radius: 30px; }
+    body.dark .slider { background-color: #39393d; }
+    .slider::before { position: absolute; content: ""; height: 26px; width: 26px; left: 2px; bottom: 2px; background-color: #ffffff; transition: 0.2s ease; border-radius: 50%; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.22); }
+    .switch input:checked + .slider { background-color: var(--green); }
+    .switch input:checked + .slider::before { transform: translateX(20px); }
+    .pill-group { display: flex; gap: 8px; padding: 12px 16px; flex-wrap: wrap; }
+    .pill-btn { border: 1px solid var(--separator); background: var(--bg); color: var(--text); padding: 8px 14px; border-radius: 20px; font-size: calc(14px * var(--font-scale)); font-weight: 500; cursor: pointer; }
+    .pill-btn.active { background: var(--accent); border-color: var(--accent); color: #ffffff; }
+    .swatch-row { display: flex; gap: 12px; padding: 12px 16px; align-items: center; }
+    .swatch { width: 30px; height: 30px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; padding: 0; }
+    .swatch.active { border-color: var(--text); transform: scale(1.08); }
+    .action-btn { display: block; width: 100%; border: none; background: transparent; color: var(--accent); font-size: calc(16px * var(--font-scale)); font-weight: 500; text-align: left; padding: 13px 16px; cursor: pointer; border-bottom: 1px solid var(--separator); }
+    .action-btn:last-child { border-bottom: none; }
+    .action-btn.danger { color: var(--red); }
+    .action-btn:active { background: var(--surface-pressed); }
+    .empty-state { text-align: center; color: var(--text-secondary); padding: 36px 20px; display: none; }
+    .empty-state.visible { display: block; }
+    .footer-note { margin: 4px 20px 18px; font-size: calc(12px * var(--font-scale)); color: var(--text-secondary); text-align: left; }
+  </style>
 </head>
 <body>
-    <div class="header">Settings</div>
-    <div class="section">
-        <div class="row">
-            <div class="row-title"><div class="icon" style="background: #007aff;"></div> Wi-Fi</div>
-            <span style="color: #8e8e93;">Not Connected</span>
-        </div>
-        <div class="row">
-            <div class="row-title"><div class="icon" style="background: #34c759;"></div> Cellular</div>
-            <span style="color: #8e8e93;">Setup</span>
-        </div>
+  <div id="view-main" class="view">
+    <div class="top-bar">
+      <h1 class="large-title">Settings</h1>
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="7"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input id="searchInput" class="search-input" type="search" placeholder="Search settings" autocomplete="off" />
+        <button id="searchClear" class="search-clear" aria-label="Clear search">&times;</button>
+      </div>
     </div>
+
+    <div class="section" data-section="profile">
+      <div class="profile-card" onclick="openSubView('about')">
+        <div class="avatar">DS</div>
+        <div class="profile-meta">
+          <p class="profile-name" id="deviceTitle">Android Device</p>
+          <p class="profile-sub" id="deviceSubtitle">Settings App v2.0 &bull; Tap for Device Info</p>
+        </div>
+        <svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </div>
+    </div>
+
+    <div class="group-label" data-group="connectivity">Connectivity</div>
+    <div class="section" data-group="connectivity">
+      <div class="row" data-keywords="airplane mode flight offline wireless">
+        <div class="row-left">
+          <span class="icon-badge" style="background: #ff9500;">
+            <svg viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+          </span>
+          <div class="row-text"><span class="row-title">Airplane Mode</span></div>
+        </div>
+        <label class="switch"><input type="checkbox" data-pref="airplaneMode" /><span class="slider"></span></label>
+      </div>
+      <div class="row clickable" data-keywords="wifi wi-fi wireless network internet" onclick="openSubView('connectivity')">
+        <div class="row-left">
+          <span class="icon-badge" style="background: #007aff;">
+            <svg viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+          </span>
+          <div class="row-text"><span class="row-title">Wi-Fi</span></div>
+        </div>
+        <div class="row-right"><span id="wifiStatus">On</span><svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+      </div>
+      <div class="row clickable" data-keywords="bluetooth audio headphones wireless" onclick="openSubView('connectivity')">
+        <div class="row-left">
+          <span class="icon-badge" style="background: #007aff;">
+            <svg viewBox="0 0 24 24"><polyline points="6.5 6.5 17.5 17.5 12 23 12 1 17.5 6.5 6.5 17.5"/></svg>
+          </span>
+          <div class="row-text"><span class="row-title">Bluetooth</span></div>
+        </div>
+        <div class="row-right"><span id="btStatus">On</span><svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+      </div>
+      <div class="row" data-keywords="cellular mobile data 5g lte network">
+        <div class="row-left">
+          <span class="icon-badge" style="background: #34c759;">
+            <svg viewBox="0 0 24 24"><path d="M2 20h.01"/><path d="M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V8"/><path d="M22 4v16"/></svg>
+          </span>
+          <div class="row-text"><span class="row-title">Mobile Data</span></div>
+        </div>
+        <label class="switch"><input type="checkbox" data-pref="mobileData" /><span class="slider"></span></label>
+      </div>
+    </div>
+
+    <div class="group-label" data-group="appearance">Appearance &amp; Experience</div>
+    <div class="section" data-group="appearance">
+      <div class="row" data-keywords="dark mode theme appearance night">
+        <div class="row-left">
+          <span class="icon-badge" style="background: #1c1c1e; border: 1px solid #48484a;">
+            <svg viewBox="0 0 24 24"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          </span>
+          <div class="row-text">
+            <span class="row-title">Dark Mode</span>
+            <span class="row-subtitle">Syncs with Android status bar</span>
+          </div>
+        </div>
+        <label class="switch"><input type="checkbox" data-pref="darkMode" /><span class="slider"></span></label>
+      </div>
+      <div class="row clickable" data-keywords="display brightness text size accent color theme" onclick="openSubView('display')">
+        <div class="row-left">
+          <span class="icon-badge" style="background: #0a84ff;">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
+          </span>
+          <div class="row-text"><span class="row-title">Display &amp; Accent</span></div>
+        </div>
+        <div class="row-right"><span id="displaySummary">Default</span><svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+      </div>
+      <div class="row clickable" data-keywords="notifications alerts sound haptics vibration" onclick="openSubView('notifications')">
+        <div class="row-left">
+          <span class="icon-badge" style="background: #ff3b30;">
+            <svg viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </span>
+          <div class="row-text"><span class="row-title">Notifications &amp; Haptics</span></div>
+        </div>
+        <div class="row-right"><span id="notifSummary">Enabled</span><svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+      </div>
+    </div>
+
+    <div class="group-label" data-group="system">System</div>
+    <div class="section" data-group="system">
+      <div class="row clickable" data-keywords="about device version android model software" onclick="openSubView('about')">
+        <div class="row-left">
+          <span class="icon-badge" style="background: #8e8e93;">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          </span>
+          <div class="row-text"><span class="row-title">General &amp; About</span></div>
+        </div>
+        <div class="row-right"><span>v2.0</span><svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+      </div>
+      <div class="row clickable" data-keywords="android system settings shortcuts battery storage apps privacy" onclick="openSubView('system')">
+        <div class="row-left">
+          <span class="icon-badge" style="background: #5856d6;">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </span>
+          <div class="row-text"><span class="row-title">Android System Shortcuts</span></div>
+        </div>
+        <div class="row-right"><svg class="chevron" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg></div>
+      </div>
+    </div>
+
+    <div id="emptyState" class="empty-state">No matching settings found.</div>
+  </div>
+
+  <div id="view-connectivity" class="view hidden">
+    <div class="sub-header">
+      <button class="back-btn" onclick="goBack()">&lsaquo; Settings</button>
+      <h2 class="sub-title">Connectivity</h2>
+    </div>
+    <div class="group-label">Quick Toggles</div>
+    <div class="section">
+      <div class="row"><div class="row-left"><div class="row-text"><span class="row-title">Wi-Fi</span></div></div><label class="switch"><input type="checkbox" data-pref="wifi" /><span class="slider"></span></label></div>
+      <div class="row"><div class="row-left"><div class="row-text"><span class="row-title">Bluetooth</span></div></div><label class="switch"><input type="checkbox" data-pref="bluetooth" /><span class="slider"></span></label></div>
+      <div class="row"><div class="row-left"><div class="row-text"><span class="row-title">Auto-Join Trusted Networks</span></div></div><label class="switch"><input type="checkbox" data-pref="autoJoinWifi" /><span class="slider"></span></label></div>
+    </div>
+    <div class="group-label">Open Native Android Settings</div>
+    <div class="section">
+      <button class="action-btn" onclick="openNative('wifi')">Open Android Wi-Fi Settings</button>
+      <button class="action-btn" onclick="openNative('bluetooth')">Open Android Bluetooth Settings</button>
+    </div>
+  </div>
+
+  <div id="view-display" class="view hidden">
+    <div class="sub-header">
+      <button class="back-btn" onclick="goBack()">&lsaquo; Settings</button>
+      <h2 class="sub-title">Display &amp; Accent</h2>
+    </div>
+    <div class="group-label">Text Size</div>
+    <div class="section">
+      <div class="pill-group" id="fontSizePills">
+        <button class="pill-btn" data-scale="0.92" onclick="setFontScale('0.92')">Compact</button>
+        <button class="pill-btn" data-scale="1" onclick="setFontScale('1')">Default</button>
+        <button class="pill-btn" data-scale="1.12" onclick="setFontScale('1.12')">Large</button>
+      </div>
+    </div>
+    <div class="group-label">Accent Color</div>
+    <div class="section">
+      <div class="swatch-row" id="accentSwatches">
+        <button class="swatch" data-color="#007aff" style="background:#007aff" onclick="setAccent('#007aff')" aria-label="Blue"></button>
+        <button class="swatch" data-color="#5856d6" style="background:#5856d6" onclick="setAccent('#5856d6')" aria-label="Indigo"></button>
+        <button class="swatch" data-color="#34c759" style="background:#34c759" onclick="setAccent('#34c759')" aria-label="Green"></button>
+        <button class="swatch" data-color="#ff9500" style="background:#ff9500" onclick="setAccent('#ff9500')" aria-label="Orange"></button>
+        <button class="swatch" data-color="#ff2d55" style="background:#ff2d55" onclick="setAccent('#ff2d55')" aria-label="Rose"></button>
+      </div>
+    </div>
+    <div class="section"><button class="action-btn" onclick="openNative('display')">Open Android Display Settings</button></div>
+  </div>
+
+  <div id="view-notifications" class="view hidden">
+    <div class="sub-header">
+      <button class="back-btn" onclick="goBack()">&lsaquo; Settings</button>
+      <h2 class="sub-title">Notifications &amp; Haptics</h2>
+    </div>
+    <div class="section">
+      <div class="row"><div class="row-left"><div class="row-text"><span class="row-title">Allow Notifications</span></div></div><label class="switch"><input type="checkbox" data-pref="notifications" /><span class="slider"></span></label></div>
+      <div class="row"><div class="row-left"><div class="row-text"><span class="row-title">Haptic Feedback</span><span class="row-subtitle">Subtle vibration when toggling switches</span></div></div><label class="switch"><input type="checkbox" data-pref="haptics" /><span class="slider"></span></label></div>
+    </div>
+    <div class="section"><button class="action-btn" onclick="openNative('sound')">Open Android Sound Settings</button></div>
+  </div>
+
+  <div id="view-system" class="view hidden">
+    <div class="sub-header">
+      <button class="back-btn" onclick="goBack()">&lsaquo; Settings</button>
+      <h2 class="sub-title">Android System Shortcuts</h2>
+    </div>
+    <div class="section">
+      <button class="action-btn" onclick="openNative('battery')">Battery Saver</button>
+      <button class="action-btn" onclick="openNative('storage')">Internal Storage</button>
+      <button class="action-btn" onclick="openNative('apps')">Installed Applications</button>
+      <button class="action-btn" onclick="openNative('privacy')">Privacy Settings</button>
+      <button class="action-btn" onclick="openNative('main')">All Android Settings</button>
+    </div>
+    <p class="footer-note">Shortcuts launch the native Android Settings screen directly on your device.</p>
+  </div>
+
+  <div id="view-about" class="view hidden">
+    <div class="sub-header">
+      <button class="back-btn" onclick="goBack()">&lsaquo; Settings</button>
+      <h2 class="sub-title">General &amp; About</h2>
+    </div>
+    <div class="section">
+      <div class="row"><span class="row-title">App Name</span><span class="row-right">Settings App</span></div>
+      <div class="row"><span class="row-title">Version</span><span class="row-right" id="aboutAppVersion">2.0</span></div>
+      <div class="row"><span class="row-title">Device</span><span class="row-right" id="aboutDevice">Web Preview</span></div>
+      <div class="row"><span class="row-title">Android OS</span><span class="row-right" id="aboutOs">N/A</span></div>
+    </div>
+    <div class="section"><button class="action-btn danger" onclick="resetPreferences()">Reset All Saved Preferences</button></div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "settings_app_prefs_v2";
+    const DEFAULTS = {
+      airplaneMode: false, wifi: true, bluetooth: true, mobileData: true,
+      autoJoinWifi: true, darkMode: false, notifications: true, haptics: true,
+      fontScale: "1", accent: "#007aff"
+    };
+    let prefs = loadPrefs();
+    let activeView = "main";
+    function loadPrefs() {
+      try { return { ...DEFAULTS, ...JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") }; }
+      catch { return { ...DEFAULTS }; }
+    }
+    function savePrefs() {
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs)); } catch {}
+    }
+    function triggerHaptic() {
+      if (prefs.haptics && window.AndroidBridge && window.AndroidBridge.hapticTick) {
+        window.AndroidBridge.hapticTick();
+      }
+    }
+    function notify(msg) {
+      if (window.AndroidBridge && window.AndroidBridge.showToast) {
+        window.AndroidBridge.showToast(msg);
+      }
+    }
+    function applyPrefs() {
+      document.body.classList.toggle("dark", !!prefs.darkMode);
+      document.documentElement.style.setProperty("--font-scale", prefs.fontScale);
+      document.documentElement.style.setProperty("--accent", prefs.accent);
+      if (window.AndroidBridge && window.AndroidBridge.setTheme) {
+        window.AndroidBridge.setTheme(!!prefs.darkMode);
+      }
+      document.querySelectorAll("input[data-pref]").forEach((el) => { el.checked = !!prefs[el.dataset.pref]; });
+      document.getElementById("wifiStatus").textContent = prefs.airplaneMode ? "Off" : (prefs.wifi ? "On" : "Off");
+      document.getElementById("btStatus").textContent = prefs.airplaneMode ? "Off" : (prefs.bluetooth ? "On" : "Off");
+      document.getElementById("notifSummary").textContent = prefs.notifications ? "Enabled" : "Muted";
+      const scaleLabels = { "0.92": "Compact", "1": "Default", "1.12": "Large" };
+      document.getElementById("displaySummary").textContent = scaleLabels[prefs.fontScale] || "Default";
+      document.querySelectorAll("#fontSizePills .pill-btn").forEach((btn) => { btn.classList.toggle("active", btn.dataset.scale === prefs.fontScale); });
+      document.querySelectorAll("#accentSwatches .swatch").forEach((btn) => { btn.classList.toggle("active", btn.dataset.color === prefs.accent); });
+    }
+    function openSubView(name) {
+      triggerHaptic();
+      document.querySelectorAll(".view").forEach((v) => v.classList.add("hidden"));
+      document.getElementById("view-" + name).classList.remove("hidden");
+      activeView = name;
+      window.scrollTo(0, 0);
+    }
+    function goBack() {
+      triggerHaptic();
+      document.querySelectorAll(".view").forEach((v) => v.classList.add("hidden"));
+      document.getElementById("view-main").classList.remove("hidden");
+      activeView = "main";
+      window.scrollTo(0, 0);
+    }
+    window.handleNativeBack = function () {
+      if (activeView !== "main") { goBack(); return true; }
+      return false;
+    };
+    function setFontScale(scale) { triggerHaptic(); prefs.fontScale = scale; savePrefs(); applyPrefs(); }
+    function setAccent(color) { triggerHaptic(); prefs.accent = color; savePrefs(); applyPrefs(); }
+    function openNative(section) {
+      triggerHaptic();
+      if (window.AndroidBridge && window.AndroidBridge.openSystemSettings) {
+        window.AndroidBridge.openSystemSettings(section);
+      } else {
+        alert("Open Android Settings: " + section);
+      }
+    }
+    function resetPreferences() {
+      prefs = { ...DEFAULTS }; savePrefs(); applyPrefs(); notify("Preferences reset to defaults");
+    }
+    document.querySelectorAll("input[data-pref]").forEach((el) => {
+      el.addEventListener("change", () => {
+        const key = el.dataset.pref;
+        prefs[key] = el.checked;
+        if (key === "airplaneMode" && el.checked) {
+          prefs.wifi = false; prefs.bluetooth = false; prefs.mobileData = false;
+        }
+        triggerHaptic(); savePrefs(); applyPrefs();
+      });
+    });
+    const searchInput = document.getElementById("searchInput");
+    const searchClear = document.getElementById("searchClear");
+    const emptyState = document.getElementById("emptyState");
+    function filterSettings() {
+      const q = searchInput.value.trim().toLowerCase();
+      searchClear.classList.toggle("visible", q.length > 0);
+      let visibleCount = 0;
+      document.querySelectorAll("#view-main .section[data-group]").forEach((sec) => {
+        const group = sec.dataset.group;
+        let groupVisible = 0;
+        sec.querySelectorAll(".row").forEach((row) => {
+          const text = (row.textContent + " " + (row.dataset.keywords || "")).toLowerCase();
+          const match = !q || text.includes(q);
+          row.style.display = match ? "flex" : "none";
+          if (match) { groupVisible++; visibleCount++; }
+        });
+        sec.style.display = groupVisible > 0 ? "block" : "none";
+        const label = document.querySelector(`.group-label[data-group="${group}"]`);
+        if (label) label.style.display = groupVisible > 0 ? "block" : "none";
+      });
+      const profileSec = document.querySelector('.section[data-section="profile"]');
+      if (profileSec) profileSec.style.display = q ? "none" : "block";
+      emptyState.classList.toggle("visible", q.length > 0 && visibleCount === 0);
+    }
+    searchInput.addEventListener("input", filterSettings);
+    searchClear.addEventListener("click", () => { searchInput.value = ""; filterSettings(); searchInput.focus(); });
+    function hydrateDeviceInfo() {
+      if (window.AndroidBridge && window.AndroidBridge.getDeviceInfo) {
+        try {
+          const info = JSON.parse(window.AndroidBridge.getDeviceInfo());
+          const deviceLabel = `${info.manufacturer} ${info.model}`.trim();
+          document.getElementById("deviceTitle").textContent = deviceLabel || "Android Device";
+          document.getElementById("deviceSubtitle").textContent = `Android ${info.androidVersion} • App v${info.appVersion}`;
+          document.getElementById("aboutDevice").textContent = deviceLabel || "Android Device";
+          document.getElementById("aboutOs").textContent = `Android ${info.androidVersion} (API ${info.sdkInt})`;
+          document.getElementById("aboutAppVersion").textContent = info.appVersion || "2.0";
+        } catch {}
+      }
+    }
+    applyPrefs();
+    hydrateDeviceInfo();
+  </script>
 </body>
 </html>
